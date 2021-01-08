@@ -90,6 +90,9 @@ public class AuditTrailRunListener extends RunListener<Run> {
     }
 
     private String buildNodeName(Run run) {
+        for (AuditLogger logger : configuration.getLoggers()) {
+            logger.log("XXX" + run.getParent().getUrl() + " #" + run.getNumber() + " " + run.getClass().getName());
+        }
         if (run instanceof AbstractBuild) {
             Node node = ((AbstractBuild) run).getBuiltOn();
             if (node != null) {
