@@ -1,5 +1,6 @@
 package hudson.plugins.audit_trail;
 
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.AbstractBuild;
 import hudson.model.Cause;
@@ -12,8 +13,11 @@ import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
 
 import javax.inject.Inject;
+
+import java.io.IOException;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
@@ -36,10 +40,28 @@ public class AuditTrailRunListener extends RunListener<Run> {
             StringBuilder builder = new StringBuilder(100);
             dumpCauses(run, builder);
             dumpParameters(run, builder);
+            EnvVars env = null;
+            String errorMessage = null;
+            if (run instanceof WorkflowRun) {
+                try {
+                    env = run.getEnvironment(listener);
+                } catch (IOException e) {
+                    errorMessage = "ENV read error: " + e.getMessage();
+                } catch (InterruptedException e) {
+                    errorMessage = "Interrupted exception: " + e.getMessage();
+                }
+            }
 
             for (AuditLogger logger : configuration.getLoggers()) {
                 logger.log(run.getParent().getUrl() + " #" + run.getNumber() + ' ' + builder.toString());
+                if (env != null) {
+                    logger.log("XXX" + env.toString());
+                }
+                if (errorMessage != null) {
+                    logger.log("Error " + errorMessage);
+                }
             }
+
         }
     }
 
