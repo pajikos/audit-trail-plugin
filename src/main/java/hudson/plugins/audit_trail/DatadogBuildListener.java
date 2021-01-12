@@ -26,6 +26,7 @@ THE SOFTWARE.
 package hudson.plugins.audit_trail;
 
 
+import com.cloudbees.workflow.rest.external.AtomFlowNodeExt;
 import com.cloudbees.workflow.rest.external.RunExt;
 import com.cloudbees.workflow.rest.external.StageNodeExt;
 import hudson.Extension;
@@ -50,6 +51,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -179,6 +181,14 @@ public class DatadogBuildListener extends RunListener<Run> {
                 RunExt extRun = getRunExtForRun((WorkflowRun) run);
                 long pauseDuration = 0;
                 for (StageNodeExt stage : extRun.getStages()) {
+                    Set stageFlowNodesSet = new HashSet<String>();
+                    List<AtomFlowNodeExt> stageFlowNodes = stage.getStageFlowNodes();
+                    for (AtomFlowNodeExt afne : stageFlowNodes) {
+                        stageFlowNodesSet.add(afne.getName());
+                        stageFlowNodesSet.add(afne.getExecNode());
+                    }
+                    tags = TagsUtil.merge(tags,
+                            Collections.singletonMap("flow_nodes", stageFlowNodesSet));
                     pauseDuration += stage.getPauseDurationMillis();
                     tags.put("child_nodes", new HashSet<>(stage.getAllChildNodeIds()));
                     tags = TagsUtil.merge(tags,
