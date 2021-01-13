@@ -69,42 +69,43 @@ public class DatadogGraphListener implements GraphListener {
             return;
         }
 
-        StepEndNode endNode = (StepEndNode) flowNode;
-        StepStartNode startNode = endNode.getStartNode();
-        int stageDepth = 0;
-        String directParentName = null;
-        for (BlockStartNode node : startNode.iterateEnclosingBlocks()) {
-            if (DatadogUtilities.isStageNode(node)) {
-                if(directParentName == null){
-                    directParentName = getStageName(node);
-                }
-                stageDepth++;
-            }
-        }
-        if(directParentName == null){
-            directParentName = "root";
-        }
+//        StepEndNode endNode = (StepEndNode) flowNode;
+//        StepStartNode startNode = endNode.getStartNode();
+//        int stageDepth = 0;
+//        String directParentName = null;
+//        for (BlockStartNode node : startNode.iterateEnclosingBlocks()) {
+//            if (DatadogUtilities.isStageNode(node)) {
+//                if(directParentName == null){
+//                    directParentName = getStageName(node);
+//                }
+//                stageDepth++;
+//            }
+//        }
+//        if(directParentName == null){
+//            directParentName = "root";
+//        }
         WorkflowRun run = getRun(flowNode);
         if(run == null){
             return;
         }
 
         try {
-            String result = DatadogUtilities.getResultTag(endNode);
+//            String result = DatadogUtilities.getResultTag(endNode);
             BuildData buildData = new BuildData(run, flowNode.getExecution().getOwner().getListener());
             Map<String, Set<String>> tags = buildData.getTags();
-            TagsUtil.addTagToTags(tags, "stage_name", getStageName(startNode));
-            TagsUtil.addTagToTags(tags, "parent_stage_name", directParentName);
-            TagsUtil.addTagToTags(tags, "stage_depth", String.valueOf(stageDepth));
+//            TagsUtil.addTagToTags(tags, "stage_name", getStageName(startNode));
+//            TagsUtil.addTagToTags(tags, "parent_stage_name", directParentName);
+//            TagsUtil.addTagToTags(tags, "stage_depth", String.valueOf(stageDepth));
             // Add custom result tag
-            TagsUtil.addTagToTags(tags, "result", result);
+//            TagsUtil.addTagToTags(tags, "result", result);
             for (AuditLogger logger : configuration.getLoggers()) {
+                logger.log("Info from onNewHead");
                 for (Map.Entry<String,Set<String>> entry : tags.entrySet())
                     logger.log("Key = " + entry.getKey() +
                             ", Value = " + entry.getValue());
             }
         } catch (IOException | InterruptedException e) {
-            DatadogUtilities.severe(logger, e, "Unable to submit the stage duration metric for " + getStageName(startNode));
+            logger.severe(e.getMessage());
         }
     }
 
